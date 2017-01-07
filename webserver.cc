@@ -116,6 +116,7 @@ void render(uv_work_t* req) {
    LOGF("[ %5d ] render\n", client->request_num);
    std::string filepath(".");
    filepath += client->path;
+   printf("Requested filepath: %s\n", filepath);
    std::string index_path = (filepath + "index.html");
    bool has_index = (access(index_path.c_str(),R_OK) != -1);
    if (/*!has_index &&*/ filepath[filepath.size()-1] == '/') {
@@ -289,6 +290,7 @@ void on_connect(uv_stream_t* server_handle, int status) {
 int main() {
   signal(SIGPIPE, SIG_IGN);
   int cores = sysconf(_SC_NPROCESSORS_ONLN);
+  printf("Listening on port: 8000\n");
   printf("number of cores %d\n",cores);
   char cores_string[10];
   sprintf(cores_string,"%d",cores);
