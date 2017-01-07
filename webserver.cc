@@ -152,6 +152,7 @@ void render(uv_work_t* req) {
             //@todo add logging to file for homekit
             closure->result = "Updated Temperature and Humidity";
             closure->response_code = "200 OK";
+            return;
           }
 
           closure->result = "no access";
