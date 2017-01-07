@@ -116,7 +116,6 @@ void render(uv_work_t* req) {
    LOGF("[ %5d ] render\n", client->request_num);
    std::string filepath(".");
    filepath += client->path;
-   printf("Requested filepath: %s\n", client->path);
    std::string index_path = (filepath + "index.html");
    bool has_index = (access(index_path.c_str(),R_OK) != -1);
    if (/*!has_index &&*/ filepath[filepath.size()-1] == '/') {
@@ -146,7 +145,7 @@ void render(uv_work_t* req) {
        }
        bool exists = (access(file_to_open.c_str(),R_OK) != -1);
        if (!exists) {
-          closure->result = "no access";
+          closure->result = "no access: " + file_to_open.c_str();
           closure->response_code = "404 Not Found";
           return;
        }
