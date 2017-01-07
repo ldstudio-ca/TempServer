@@ -145,7 +145,12 @@ void render(uv_work_t* req) {
        }
        bool exists = (access(file_to_open.c_str(),R_OK) != -1);
        if (!exists) {
+<<<<<<< HEAD
           closure->result = "no access: " + file_to_open.c_str();
+=======
+          printf("%s\n",  file_to_open.c_str());
+          closure->result = "no access: ";
+>>>>>>> 73a9a495cea06ac79545fb403bfeb87347482b30
           closure->response_code = "404 Not Found";
           return;
        }
