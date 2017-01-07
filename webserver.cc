@@ -149,7 +149,7 @@ void render(uv_work_t* req) {
 
           if(endswith(file_to_open.c_str(), "temp" )){
             printf("Updating Temperature and Humidity\n");
-            std:cout << client->parser.data;
+            std::cout << client->parser.data;
             //@todo add logging to file for homekit
             closure->result = "Updated Temperature and Humidity";
             closure->response_code = "200 OK";
