@@ -116,7 +116,7 @@ void render(uv_work_t* req) {
    LOGF("[ %5d ] render\n", client->request_num);
    std::string filepath(".");
    filepath += client->path;
-   printf("Requested filepath: %s\n", filepath);
+   printf("Requested filepath: %s\n", client->path);
    std::string index_path = (filepath + "index.html");
    bool has_index = (access(index_path.c_str(),R_OK) != -1);
    if (/*!has_index &&*/ filepath[filepath.size()-1] == '/') {
