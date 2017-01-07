@@ -146,6 +146,11 @@ void render(uv_work_t* req) {
        bool exists = (access(file_to_open.c_str(),R_OK) != -1);
        if (!exists) {
           printf("%s\n",  file_to_open.c_str());
+
+          if(endswith(file_to_open.c_str(), "temp" )){
+            printf("Updating Temperature and Humidity\n");
+          }
+
           closure->result = "no access";
           closure->response_code = "404 Not Found";
           return;
