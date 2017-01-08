@@ -32,6 +32,8 @@ static uv_loop_t* uv_loop;
 static uv_tcp_t server;
 static http_parser_settings parser_settings;
 
+std::string t_data;
+
 struct client_t {
   uv_tcp_t handle;
   http_parser parser;
@@ -258,6 +260,12 @@ int on_header_value(http_parser* /*parser*/, const char* at, size_t length) {
 int on_body(http_parser* /*parser*/, const char* at, size_t length) {
   LOGF("Body: %.*s\n", (int)length, at);
   printf("Body: %.*s\n", (int)length, at);
+  std::string temp(at);
+  std::string temperature = temp.substr (12,5);
+  std::string humidity= temp.substr (27,5);
+  printf("The temp is %s\nThe humidity is %s\n", temperature.c_str(),
+          humidity.c_str());
+  t_data = at;
   return 0;
 }
 
