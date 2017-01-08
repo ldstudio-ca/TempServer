@@ -257,6 +257,7 @@ int on_header_value(http_parser* /*parser*/, const char* at, size_t length) {
 
 int on_body(http_parser* /*parser*/, const char* at, size_t length) {
   LOGF("Body: %.*s\n", (int)length, at);
+  printf("Body: %.*s\n", (int)length, at);
   return 0;
 }
 
