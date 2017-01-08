@@ -103,8 +103,7 @@ void after_write(uv_write_t* req, int status) {
   }
 }
 
-bool endswith(std::string const& value, std::string const& search)
-{
+bool endswith(std::string const& value, std::string const& search){
     if (value.length() >= search.length()) {
         return (0 == value.compare (value.length() - search.length(), search.length(), search));
     } else {
@@ -213,11 +212,13 @@ void after_render(uv_work_t* req) {
 }
 
 int on_message_begin(http_parser* /*parser*/) {
+  printf("\n***MESSAGE BEGIN***\n");
   LOGF("\n***MESSAGE BEGIN***\n");
   return 0;
 }
 
 int on_headers_complete(http_parser* /*parser*/) {
+  printf("\n***HEADERS COMPLETE***\n");
   LOGF("\n***HEADERS COMPLETE***\n");
   return 0;
 }
@@ -225,6 +226,8 @@ int on_headers_complete(http_parser* /*parser*/) {
 int on_url(http_parser* parser, const char* url, size_t length) {
   client_t* client = (client_t*) parser->data;
     //printf("%s", url);
+  printf("[ %5d ] on_url\n", client->request_num);
+  printf("Url: %.*s\n", (int)length, url);
   LOGF("[ %5d ] on_url\n", client->request_num);
   LOGF("Url: %.*s\n", (int)length, url);
   // TODO - use https://github.com/bnoordhuis/uriparser2 instead?
@@ -246,11 +249,13 @@ int on_url(http_parser* parser, const char* url, size_t length) {
 }
 
 int on_header_field(http_parser* /*parser*/, const char* at, size_t length) {
+  printf("Header field: %.*s\n", (int)length, at);
   LOGF("Header field: %.*s\n", (int)length, at);
   return 0;
 }
 
 int on_header_value(http_parser* /*parser*/, const char* at, size_t length) {
+  printf("Header value: %.*s\n", (int)length, at);
   LOGF("Header value: %.*s\n", (int)length, at);
   return 0;
 }
