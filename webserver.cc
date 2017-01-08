@@ -38,6 +38,7 @@ struct client_t {
   uv_write_t write_req;
   int request_num;
   std::string path;
+  std::string data;
 };
 
 void on_close(uv_handle_t* handle) {
@@ -255,6 +256,7 @@ int on_header_value(http_parser* /*parser*/, const char* at, size_t length) {
 }
 
 int on_body(http_parser* /*parser*/, const char* at, size_t length) {
+  printf("Body: %.*s\n", (int)length, at); 
   LOGF("Body: %.*s\n", (int)length, at);
   return 0;
 }
