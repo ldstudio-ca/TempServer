@@ -32,7 +32,6 @@ static uv_loop_t* uv_loop;
 static uv_tcp_t server;
 static http_parser_settings parser_settings;
 
-std::string t_data;
 
 struct client_t {
   uv_tcp_t handle;
@@ -42,6 +41,13 @@ struct client_t {
   std::string path;
   std::string data;
 };
+
+struct th_data {
+  std::string temperature;
+  std::string humidity;
+};
+
+th_data t_data;
 
 void on_close(uv_handle_t* handle) {
   client_t* client = (client_t*) handle->data;
@@ -151,6 +157,7 @@ void render(uv_work_t* req) {
 
           if(endswith(file_to_open.c_str(), "temp" )){
               printf("Updating Temperature and Humidity\n");
+              printf("Temp: %s", t_data.temperature.c_str());
               //@todo add logging to file for homekit
               closure->result = "Updated Temperature and Humidity";
               closure->response_code = "200 OK";
@@ -265,7 +272,8 @@ int on_body(http_parser* /*parser*/, const char* at, size_t length) {
   std::string humidity= temp.substr (27,5);
   printf("The temp is %s\nThe humidity is %s\n", temperature.c_str(),
           humidity.c_str());
-  t_data = at;
+  t_data.temperature = temperature;
+  t_data.humidity = humidity;
   return 0;
 }
 
