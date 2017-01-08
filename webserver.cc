@@ -57,6 +57,7 @@ void on_read(uv_stream_t* tcp, ssize_t nread, const uv_buf_t * buf) {
   if (nread >= 0) {
     parsed = (ssize_t)http_parser_execute(
         &client->parser, &parser_settings, buf->base, nread);
+
     if (client->parser.upgrade) {
       LOG_ERROR("parse error: cannot handle http upgrade");
       uv_close((uv_handle_t*) &client->handle, on_close);
@@ -145,15 +146,13 @@ void render(uv_work_t* req) {
        }
        bool exists = (access(file_to_open.c_str(),R_OK) != -1);
        if (!exists) {
-          printf("%s\n",  file_to_open.c_str());
 
           if(endswith(file_to_open.c_str(), "temp" )){
-            printf("Updating Temperature and Humidity\n");
-            std::cout << client->parser.data;
-            //@todo add logging to file for homekit
-            closure->result = "Updated Temperature and Humidity";
-            closure->response_code = "200 OK";
-            return;
+              printf("Updating Temperature and Humidity\n");
+              //@todo add logging to file for homekit
+              closure->result = "Updated Temperature and Humidity";
+              closure->response_code = "200 OK";
+              return;
           }
 
           closure->result = "no access";
@@ -224,6 +223,7 @@ int on_headers_complete(http_parser* /*parser*/) {
 
 int on_url(http_parser* parser, const char* url, size_t length) {
   client_t* client = (client_t*) parser->data;
+    //printf("%s", url);
   LOGF("[ %5d ] on_url\n", client->request_num);
   LOGF("Url: %.*s\n", (int)length, url);
   // TODO - use https://github.com/bnoordhuis/uriparser2 instead?
