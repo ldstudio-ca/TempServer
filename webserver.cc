@@ -32,6 +32,10 @@ static uv_loop_t* uv_loop;
 static uv_tcp_t server;
 static http_parser_settings parser_settings;
 
+struct th_data {
+    std::string temperature;
+    std::string humidity;
+};
 
 struct client_t {
   uv_tcp_t handle;
@@ -40,12 +44,9 @@ struct client_t {
   int request_num;
   std::string path;
   std::string data;
+    th_data thData;
 };
 
-struct th_data {
-  std::string temperature;
-  std::string humidity;
-};
 
 th_data t_data;
 
@@ -122,6 +123,9 @@ bool endswith(std::string const& value, std::string const& search){
 void render(uv_work_t* req) {
    render_baton *closure = static_cast<render_baton *>(req->data);
    client_t* client = (client_t*) closure->client;
+
+    client->thData = t_data;
+
    LOGF("[ %5d ] render\n", client->request_num);
    std::string filepath(".");
    filepath += client->path;
@@ -157,7 +161,7 @@ void render(uv_work_t* req) {
 
           if(endswith(file_to_open.c_str(), "temp" )){
               printf("Updating Temperature and Humidity\n");
-              printf("Temp: %s", t_data.temperature.c_str());
+              printf("Temp: \t%s\n", client->thData.temperature.c_str());
               //@todo add logging to file for homekit
               closure->result = "Updated Temperature and Humidity";
               closure->response_code = "200 OK";
@@ -194,7 +198,8 @@ void after_render(uv_work_t* req) {
   render_baton *closure = static_cast<render_baton *>(req->data);
   client_t* client = (client_t*) closure->client;
 
-  LOGF("[ %5d ] after render\n", client->request_num);
+    printf("[ %5d ] after render\n", client->request_num);
+    LOGF("[ %5d ] after render\n", client->request_num);
 
   std::ostringstream rep;
   rep << "HTTP/1.1 " << closure->response_code << "\r\n"
@@ -266,7 +271,7 @@ int on_header_value(http_parser* /*parser*/, const char* at, size_t length) {
 
 int on_body(http_parser* /*parser*/, const char* at, size_t length) {
   LOGF("Body: %.*s\n", (int)length, at);
-  printf("Body: %.*s\n", (int)length, at);
+  printf("%.*s\n", (int)length, at);
   std::string temp(at);
   std::string temperature = temp.substr (12,5);
   std::string humidity= temp.substr (27,5);
