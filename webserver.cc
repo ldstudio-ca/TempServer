@@ -5,6 +5,7 @@
 #include <unistd.h> // _SC_NPROCESSORS_ONLN on OS X
 #include "uv.h"
 #include "http_parser.h"
+#include <curl/curl.h>
 
 // stl
 #include <sstream>
@@ -44,7 +45,7 @@ struct client_t {
   int request_num;
   std::string path;
   std::string data;
-    th_data thData;
+  th_data thData;
 };
 
 
@@ -162,6 +163,40 @@ void render(uv_work_t* req) {
           if(endswith(file_to_open.c_str(), "temp" )){
               printf("Updating Temperature and Humidity\n");
               printf("Temp: \t%s\n", client->thData.temperature.c_str());
+              CURL *curl;
+              CURLcode res;
+
+              /* In windows, this will init the winsock stuff */
+              curl_global_init(CURL_GLOBAL_ALL);
+
+              /* get a curl handle */
+              curl = curl_easy_init();
+
+              char str[40];
+              strcat(str, "temperature=");
+              strcat(str, client->thData.temperature.c_str());
+              strcat(str, "&humidity=");
+              strcat(str, client->thData.humidity.c_str());
+
+              if(curl) {
+                  /* First set the URL that is about to receive our POST. This URL can
+                     just as well be a https:// URL if that is what should receive the
+                     data. */
+                  curl_easy_setopt(curl, CURLOPT_URL, "https://dweet.io:443/dweet/for/98365945-1C9E-4F76-9F43-6389386C062F");
+                  /* Now specify the POST data */
+                  curl_easy_setopt(curl, CURLOPT_POSTFIELDS, str);
+
+                  /* Perform the request, res will get the return code */
+                  res = curl_easy_perform(curl);
+                  /* Check for errors */
+                  if(res != CURLE_OK)
+                      fprintf(stderr, "curl_easy_perform() failed: %s\n",
+                              curl_easy_strerror(res));
+
+                  /* always cleanup */
+                  curl_easy_cleanup(curl);
+              }
+              curl_global_cleanup();
               //@todo add logging to file for homekit
               closure->result = "Updated Temperature and Humidity";
               closure->response_code = "200 OK";
@@ -206,6 +241,7 @@ void after_render(uv_work_t* req) {
       << "Content-Type: " << closure->content_type << "\r\n"
       << "Connection: keep-alive\r\n"
       << "Content-Length: " << closure->result.size() << "\r\n"
+      << "X-Server: LD Studio" << "\r\n"
       << "Access-Control-Allow-Origin: *" << "\r\n"
       << "\r\n";
   rep << closure->result;
@@ -281,7 +317,9 @@ int on_body(http_parser* /*parser*/, const char* at, size_t length) {
   t_data.humidity = humidity;
   return 0;
 }
-
+/**
+ * http_parse on message parse complete handler
+ **/
 int on_message_complete(http_parser* parser) {
   client_t* client = (client_t*) parser->data;
   LOGF("[ %5d ] on_message_complete\n", client->request_num);
@@ -321,34 +359,36 @@ void on_connect(uv_stream_t* server_handle, int status) {
 #define MAX_WRITE_HANDLES 1000
 
 int main() {
-  signal(SIGPIPE, SIG_IGN);
-  int cores = sysconf(_SC_NPROCESSORS_ONLN);
-  printf("Listening on port: 8000\n");
-  printf("number of cores %d\n",cores);
-  char cores_string[10];
-  sprintf(cores_string,"%d",cores);
-  setenv("UV_THREADPOOL_SIZE",cores_string,1);
-  parser_settings.on_url = on_url;
-  // notification callbacks
-  parser_settings.on_message_begin = on_message_begin;
-  parser_settings.on_headers_complete = on_headers_complete;
-  parser_settings.on_message_complete = on_message_complete;
-  // data callbacks
-  parser_settings.on_header_field = on_header_field;
-  parser_settings.on_header_value = on_header_value;
-  parser_settings.on_body = on_body;
-  uv_loop = uv_default_loop();
-  int r = uv_tcp_init(uv_loop, &server);
-  CHECK(r, "tcp_init");
-  r = uv_tcp_keepalive(&server,1,60);
-  CHECK(r, "tcp_keepalive");
-  struct sockaddr_in address;
-  r = uv_ip4_addr("0.0.0.0", 8000, &address);
-  CHECK(r, "ip4_addr");
-  r = uv_tcp_bind(&server, (const struct sockaddr*)&address, 0);
-  CHECK(r, "tcp_bind");
-  r = uv_listen((uv_stream_t*)&server, MAX_WRITE_HANDLES, on_connect);
-  CHECK(r, "uv_listen");
-  LOG("listening on port 8000");
-  uv_run(uv_loop,UV_RUN_DEFAULT);
+    signal(SIGPIPE, SIG_IGN);
+    int cores = sysconf(_SC_NPROCESSORS_ONLN);
+
+
+    printf("Listening on port: 8000\n");
+    printf("number of cores %d\n",cores);
+    char cores_string[10];
+    sprintf(cores_string,"%d",cores);
+    setenv("UV_THREADPOOL_SIZE",cores_string,1);
+    parser_settings.on_url = on_url;
+    // notification callbacks
+    parser_settings.on_message_begin = on_message_begin;
+    parser_settings.on_headers_complete = on_headers_complete;
+    parser_settings.on_message_complete = on_message_complete;
+    // data callbacks
+    parser_settings.on_header_field = on_header_field;
+    parser_settings.on_header_value = on_header_value;
+    parser_settings.on_body = on_body;
+    uv_loop = uv_default_loop();
+    int r = uv_tcp_init(uv_loop, &server);
+    CHECK(r, "tcp_init");
+    r = uv_tcp_keepalive(&server,1,60);
+    CHECK(r, "tcp_keepalive");
+    struct sockaddr_in address;
+    r = uv_ip4_addr("0.0.0.0", 8000, &address);
+    CHECK(r, "ip4_addr");
+    r = uv_tcp_bind(&server, (const struct sockaddr*)&address, 0);
+    CHECK(r, "tcp_bind");
+    r = uv_listen((uv_stream_t*)&server, MAX_WRITE_HANDLES, on_connect);
+    CHECK(r, "uv_listen");
+    LOG("listening on port 8000");
+    uv_run(uv_loop,UV_RUN_DEFAULT);
 }
