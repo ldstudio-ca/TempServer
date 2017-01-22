@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cassert>
+#include <cstring>
 #include <unistd.h> // _SC_NPROCESSORS_ONLN on OS X
 #include "uv.h"
 #include "http_parser.h"
@@ -173,10 +174,10 @@ void render(uv_work_t* req) {
               curl = curl_easy_init();
 
               char str[40];
-              strcat(str, "temperature=");
-              strcat(str, client->thData.temperature.c_str());
-              strcat(str, "&humidity=");
-              strcat(str, client->thData.humidity.c_str());
+              std::strcat(str, "temperature=");
+              std::strcat(str, client->thData.temperature.c_str());
+              std::strcat(str, "&humidity=");
+              std::strcat(str, client->thData.humidity.c_str());
 
               if(curl) {
                   /* First set the URL that is about to receive our POST. This URL can
