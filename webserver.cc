@@ -173,7 +173,7 @@ void render(uv_work_t* req) {
               /* get a curl handle */
               curl = curl_easy_init();
 
-              char str[40];
+              char str[40] = {0};
               std::strcat(str, "temperature=");
               std::strcat(str, client->thData.temperature.c_str());
               std::strcat(str, "&humidity=");
